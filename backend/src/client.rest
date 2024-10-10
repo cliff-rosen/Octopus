@@ -1,3 +1,121 @@
+@baseUrl = http://127.0.0.1:5000
+@prodUrl = https://9848-72-76-95-132.ngrok-free.app
+@authToken = {{login.response.body.access_token}}
 
-GET http://127.0.0.1:5000/hello
-accept: application/json
+### Register a new user
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+    "username": "testuser",
+    "password": "testpassword"
+}
+
+### Login
+# @name login
+POST {{prodUrl}}/auth/login
+Content-Type: application/json
+
+{
+    "username": "testuser",
+    "password": "testpassword"
+}
+
+### Logout
+POST {{baseUrl}}/auth/logout
+Content-Type: application/json
+
+{
+    "token": "{{authToken}}"
+}
+
+### Get all screens
+POST {{baseUrl}}/screens
+Content-Type: application/json
+
+{
+    "token": "{{authToken}}"
+}
+
+### Create a new screen
+POST {{baseUrl}}/screens/create
+Content-Type: application/json
+
+{
+    "token": "{{authToken}}",
+    "name": "Test Screen",
+    "content": "Initial content for Test Screen"
+}
+
+### Get a specific screen
+POST {{baseUrl}}/screens/get
+Content-Type: application/json
+
+{
+    "token": "{{authToken}}",
+    "screen_id": 1
+}
+
+### Update a screen
+POST {{baseUrl}}/screens/update
+Content-Type: application/json
+
+{
+    "token": "{{authToken}}",
+    "screen_id": 1,
+    "name": "Updated Test Screen",
+    "content": "Updated content for Test Screen"
+}
+
+### Get screen content
+POST {{baseUrl}}/screens/content/get
+Content-Type: application/json
+
+{
+    "token": "{{authToken}}",
+    "screen_id": 1
+}
+
+### Update screen content
+POST {{baseUrl}}/screens/content/update
+Content-Type: application/json
+
+{
+    "token": "{{authToken}}",
+    "screen_id": 1,
+    "content": "New content for Test Screen"
+}
+
+### Delete a screen
+POST {{baseUrl}}/screens/delete
+Content-Type: application/json
+
+{
+    "token": "{{authToken}}",
+    "screen_id": 1
+}
+
+### Try to access a deleted screen (should fail)
+POST {{baseUrl}}/screens/get
+Content-Type: application/json
+
+{
+    "token": "{{authToken}}",
+    "screen_id": 1
+}
+
+### Try to access without authentication (should fail)
+POST {{baseUrl}}/screens
+Content-Type: application/json
+
+{
+}
+
+### Try to login with wrong credentials (should fail)
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+    "username": "testuser",
+    "password": "wrongpassword"
+}

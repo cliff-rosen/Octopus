@@ -10,6 +10,7 @@
    - Represents a virtual screen created by a user
    - Belongs to one user
    - Can be accessed for read/write by a user via URL or by a chatbot via API
+   - Contains content as a large text field
 
 3. Session
    - Represents an active user session
@@ -28,9 +29,6 @@
 3. Content storage for Virtual Screens
 4. Session management and token storage
 
-This simple entity-relationship model provides a foundation for the Virtual Screen Manager application. The next step would be to define the specific attributes for each entity and create the corresponding database schema.
-
-
 ## Database Schema (SQL DDL)
 
 create table users (
@@ -44,6 +42,7 @@ create table virtual_screens (
     user_id int not null,
     name varchar(255) not null,
     url varchar(255) not null,
+    content TEXT,
     created_at timestamp default current_timestamp,
     updated_at timestamp default current_timestamp
 );

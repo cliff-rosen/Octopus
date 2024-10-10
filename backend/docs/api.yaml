@@ -1,0 +1,286 @@
+openapi: 3.0.0
+info:
+  title: Virtual Screen Manager API
+  description: API for managing virtual screens and user authentication
+  version: 1.0.0
+
+servers:
+  - url: https://9848-72-76-95-132.ngrok-free.app
+    description: Ngrok public URL
+
+paths:
+  /auth/register:
+    post:
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCredentials'
+      responses:
+        '201':
+          description: User registered successfully
+        '400':
+          description: Invalid input
+        '409':
+          description: Username already exists
+
+  /auth/login:
+    post:
+      summary: Authenticate a user and get a token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCredentials'
+      responses:
+        '200':
+          description: Successful authentication
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Token'
+        '401':
+          description: Invalid credentials
+
+  /auth/logout:
+    post:
+      summary: Logout a user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenOnly'
+      responses:
+        '200':
+          description: Logout successful
+
+  /screens:
+    post:
+      summary: Get all screens for the authenticated user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenOnly'
+      responses:
+        '200':
+          description: List of screens
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Screen'
+
+  /screens/create:
+    post:
+      summary: Create a new screen
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewScreen'
+      responses:
+        '201':
+          description: Screen created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Screen'
+
+  /screens/get:
+    post:
+      summary: Get a specific screen
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScreenRequest'
+      responses:
+        '200':
+          description: Screen details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Screen'
+        '404':
+          description: Screen not found
+
+  /screens/update:
+    post:
+      summary: Update a screen
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateScreen'
+      responses:
+        '200':
+          description: Screen updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Screen'
+        '404':
+          description: Screen not found
+
+  /screens/delete:
+    post:
+      summary: Delete a screen
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScreenRequest'
+      responses:
+        '200':
+          description: Screen deleted
+        '404':
+          description: Screen not found
+
+  /screens/content/get:
+    post:
+      summary: Get screen content
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScreenRequest'
+      responses:
+        '200':
+          description: Screen content
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScreenContent'
+        '404':
+          description: Screen not found
+
+  /screens/content/update:
+    post:
+      summary: Update screen content
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateScreenContent'
+      responses:
+        '200':
+          description: Screen content updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Screen'
+        '404':
+          description: Screen not found
+
+components:
+  schemas:
+    UserCredentials:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+
+    Token:
+      type: object
+      properties:
+        access_token:
+          type: string
+
+    TokenOnly:
+      type: object
+      required:
+        - token
+      properties:
+        token:
+          type: string
+
+    Screen:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        url:
+          type: string
+        content:
+          type: string
+
+    NewScreen:
+      type: object
+      required:
+        - token
+        - name
+      properties:
+        token:
+          type: string
+        name:
+          type: string
+        content:
+          type: string
+
+    ScreenRequest:
+      type: object
+      required:
+        - token
+        - screen_id
+      properties:
+        token:
+          type: string
+        screen_id:
+          type: integer
+
+    UpdateScreen:
+      type: object
+      required:
+        - token
+        - screen_id
+      properties:
+        token:
+          type: string
+        screen_id:
+          type: integer
+        name:
+          type: string
+        content:
+          type: string
+
+    ScreenContent:
+      type: object
+      required:
+        - content
+      properties:
+        content:
+          type: string
+
+    UpdateScreenContent:
+      type: object
+      required:
+        - token
+        - screen_id
+        - content
+      properties:
+        token:
+          type: string
+        screen_id:
+          type: integer
+        content:
+          type: string

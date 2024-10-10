@@ -3,7 +3,7 @@ from mysql.connector import Error
 from werkzeug.security import generate_password_hash, check_password_hash
 import uuid
 from datetime import datetime, timedelta
-from src.config import DB_CONFIG
+from config import DB_CONFIG
 
 class Database:
     def __init__(self):
@@ -60,36 +60,55 @@ class Database:
         self.execute(query, (session_token,))
 
     # Virtual Screen Management
-    def create_screen(self, user_id, name):
+    def create_screen(self, user_id, name, content=""):
         url = f"/screens/{str(uuid.uuid4())}"
-        query = "INSERT INTO virtual_screens (user_id, name, url) VALUES (%s, %s, %s)"
-        screen_id = self.execute(query, (user_id, name, url))
-        return {"id": screen_id, "name": name, "url": url}
+        query = "INSERT INTO virtual_screens (user_id, name, url, content) VALUES (%s, %s, %s, %s)"
+        screen_id = self.execute(query, (user_id, name, url, content))
+        return {"id": screen_id, "name": name, "url": url, "content": content}
 
     def get_user_screens(self, user_id):
         query = "SELECT id, name, url FROM virtual_screens WHERE user_id = %s"
         return self.execute(query, (user_id,))
 
     def get_screen(self, screen_id, user_id):
-        query = "SELECT id, name, url FROM virtual_screens WHERE id = %s AND user_id = %s"
+        query = "SELECT id, name, url, content FROM virtual_screens WHERE id = %s AND user_id = %s"
         result = self.execute(query, (screen_id, user_id))
         return result[0] if result else None
 
-    def update_screen(self, screen_id, user_id, name):
-        query = "UPDATE virtual_screens SET name = %s, updated_at = NOW() WHERE id = %s AND user_id = %s"
-        self.execute(query, (name, screen_id, user_id))
+    def update_screen(self, screen_id, user_id, name=None, content=None):
+        update_fields = []
+        params = []
+        if name is not None:
+            update_fields.append("name = %s")
+            params.append(name)
+        if content is not None:
+            update_fields.append("content = %s")
+            params.append(content)
+        
+        if not update_fields:
+            return None  # No updates to perform
+        
+        update_fields.append("updated_at = NOW()")
+        query = f"UPDATE virtual_screens SET {', '.join(update_fields)} WHERE id = %s AND user_id = %s"
+        params.extend([screen_id, user_id])
+        
+        self.execute(query, tuple(params))
         return self.get_screen(screen_id, user_id)
 
     def delete_screen(self, screen_id, user_id):
         query = "DELETE FROM virtual_screens WHERE id = %s AND user_id = %s"
         self.execute(query, (screen_id, user_id))
 
-    # Additional methods for content management can be added here
-    # For example:
-    # def get_screen_content(self, screen_id):
-    #     ...
-    # def update_screen_content(self, screen_id, content):
-    #     ...
+    # Screen Content Management
+    def get_screen_content(self, screen_id, user_id):
+        query = "SELECT content FROM virtual_screens WHERE id = %s AND user_id = %s"
+        result = self.execute(query, (screen_id, user_id))
+        return result[0]['content'] if result else None
+
+    def update_screen_content(self, screen_id, user_id, content):
+        query = "UPDATE virtual_screens SET content = %s, updated_at = NOW() WHERE id = %s AND user_id = %s"
+        self.execute(query, (content, screen_id, user_id))
+        return self.get_screen(screen_id, user_id)
 
 # Usage example:
 # db = Database()

@@ -36,6 +36,7 @@ class TestDatabase(unittest.TestCase):
                 user_id INT NOT NULL,
                 name VARCHAR(255) NOT NULL,
                 url VARCHAR(255) NOT NULL,
+                content VARCHAR(255) NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
             )
@@ -102,22 +103,38 @@ class TestDatabase(unittest.TestCase):
         user_id = self.db.create_user("screenuser", "screenpass")
         
         # Create screen
-        screen = self.db.create_screen(user_id, "Test Screen")
+        screen = self.db.create_screen(user_id, "Test Screen", "Initial content")
         self.assertIsNotNone(screen['id'])
         self.assertEqual(screen['name'], "Test Screen")
+        self.assertEqual(screen['content'], "Initial content")
 
         # Get user screens
         screens = self.db.get_user_screens(user_id)
         self.assertEqual(len(screens), 1)
         self.assertEqual(screens[0]['name'], "Test Screen")
 
-        # Update screen
-        updated_screen = self.db.update_screen(screen['id'], user_id, "Updated Screen")
+        # Update screen name and content
+        updated_screen = self.db.update_screen(screen['id'], user_id, name="Updated Screen", content="Updated content")
+        self.assertIsNotNone(updated_screen)
         self.assertEqual(updated_screen['name'], "Updated Screen")
+        self.assertEqual(updated_screen['content'], "Updated content")
+
+        # Update only screen name
+        name_updated_screen = self.db.update_screen(screen['id'], user_id, name="Name Updated Screen")
+        self.assertIsNotNone(name_updated_screen)
+        self.assertEqual(name_updated_screen['name'], "Name Updated Screen")
+        self.assertEqual(name_updated_screen['content'], "Updated content")
+
+        # Update only screen content
+        content_updated_screen = self.db.update_screen(screen['id'], user_id, content="Content Updated")
+        self.assertIsNotNone(content_updated_screen)
+        self.assertEqual(content_updated_screen['name'], "Name Updated Screen")
+        self.assertEqual(content_updated_screen['content'], "Content Updated")
 
         # Get specific screen
         fetched_screen = self.db.get_screen(screen['id'], user_id)
-        self.assertEqual(fetched_screen['name'], "Updated Screen")
+        self.assertEqual(fetched_screen['name'], "Name Updated Screen")
+        self.assertEqual(fetched_screen['content'], "Content Updated")
 
         # Delete screen
         self.db.delete_screen(screen['id'], user_id)
