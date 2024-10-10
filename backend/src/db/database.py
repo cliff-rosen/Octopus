@@ -67,7 +67,7 @@ class Database:
         return {"id": screen_id, "name": name, "url": url, "content": content}
 
     def get_user_screens(self, user_id):
-        query = "SELECT id, name, url FROM virtual_screens WHERE user_id = %s"
+        query = "SELECT id, name, url, content FROM virtual_screens WHERE user_id = %s"
         return self.execute(query, (user_id,))
 
     def get_screen(self, screen_id, user_id):
@@ -109,6 +109,20 @@ class Database:
         query = "UPDATE virtual_screens SET content = %s, updated_at = NOW() WHERE id = %s AND user_id = %s"
         self.execute(query, (content, screen_id, user_id))
         return self.get_screen(screen_id, user_id)
+
+    def clear_user_screens(self, user_id):
+        query = "DELETE FROM virtual_screens WHERE user_id = %s"
+        cursor = self.connection.cursor()
+        try:
+            cursor.execute(query, (user_id,))
+            deleted_count = cursor.rowcount
+            self.connection.commit()
+            return deleted_count
+        except Error as e:
+            print(f"Error: {e}")
+            return 0
+        finally:
+            cursor.close()
 
 # Usage example:
 # db = Database()

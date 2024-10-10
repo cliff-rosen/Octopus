@@ -1,5 +1,6 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, make_response
 from flask_jwt_extended import JWTManager, create_access_token, get_jwt_identity, decode_token
+from flask_cors import CORS  # Add this import
 from functools import wraps
 from db.database import Database
 from config import DB_CONFIG
@@ -8,14 +9,28 @@ import logging
 from werkzeug.exceptions import UnprocessableEntity
 
 app = Flask(__name__)
+# Configure CORS
+CORS(app, resources={r"/*": {"origins": "http://localhost:3000", "methods": ["GET", "POST", "OPTIONS"]}})
+
 app.config['JWT_SECRET_KEY'] = str(uuid.uuid4())  # Use a secure key in production
 jwt = JWTManager(app)
 
 db = Database()
 
 # Set up logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.INFO)  # Fixed: Closed parenthesis
 logger = logging.getLogger(__name__)
+
+# Add this decorator function
+def add_cors_headers(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        response = make_response(func(*args, **kwargs))
+        response.headers['Access-Control-Allow-Origin'] = 'http://localhost:3000'
+        response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
+        response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+        return response
+    return wrapper
 
 # Custom decorator to check JWT in request body
 def jwt_required_in_body(fn):
@@ -65,6 +80,7 @@ def register():
         return jsonify({"msg": "Registration failed"}), 500
 
 @app.route('/auth/login', methods=['POST'])
+@add_cors_headers
 def login():
     username = request.json.get('username', None)
     password = request.json.get('password', None)
@@ -97,6 +113,10 @@ def logout(identity):
 @jwt_required_in_body
 def get_screens(identity):
     screens = db.get_user_screens(identity)
+    # Add width and height to each screen
+    for screen in screens:
+        screen['width'] = 800
+        screen['height'] = 500
     return jsonify(screens), 200
 
 @app.route('/screens/create', methods=['POST'])
@@ -176,6 +196,19 @@ def update_screen_content(identity):
         return jsonify(screen), 200
     else:
         return jsonify({"msg": "Screen not found or access denied"}), 404
+
+@app.route('/screens/clear', methods=['POST'])
+@jwt_required_in_body
+def clear_all_screens(identity):
+    try:
+        deleted_count = db.clear_user_screens(identity)
+        if deleted_count > 0:
+            return jsonify({"msg": f"Successfully deleted {deleted_count} screens"}), 200
+        else:
+            return jsonify({"msg": "No screens found for the user"}), 404
+    except Exception as e:
+        logger.error(f"Error clearing screens: {str(e)}")
+        return jsonify({"msg": "An error occurred while clearing screens"}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)

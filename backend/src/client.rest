@@ -119,3 +119,11 @@ Content-Type: application/json
     "username": "testuser",
     "password": "wrongpassword"
 }
+
+### Clear all screens
+POST {{baseUrl}}/screens/clear
+Content-Type: application/json
+
+{
+    "token": "{{authToken}}"
+}

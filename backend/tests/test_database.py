@@ -1,3 +1,7 @@
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 import unittest
 from src.db.database import Database
 from src.config import DB_CONFIG
@@ -140,6 +144,26 @@ class TestDatabase(unittest.TestCase):
         self.db.delete_screen(screen['id'], user_id)
         deleted_screen = self.db.get_screen(screen['id'], user_id)
         self.assertIsNone(deleted_screen)
+
+    def test_clear_user_screens(self):
+        user_id = self.db.create_user("clearuser", "clearpass")
+        
+        # Create multiple screens
+        self.db.create_screen(user_id, "Screen 1", "Content 1")
+        self.db.create_screen(user_id, "Screen 2", "Content 2")
+        self.db.create_screen(user_id, "Screen 3", "Content 3")
+        
+        # Verify screens are created
+        screens = self.db.get_user_screens(user_id)
+        self.assertEqual(len(screens), 3)
+        
+        # Clear all screens
+        deleted_count = self.db.clear_user_screens(user_id)
+        self.assertEqual(deleted_count, 3)
+        
+        # Verify all screens are deleted
+        screens_after_clear = self.db.get_user_screens(user_id)
+        self.assertEqual(len(screens_after_clear), 0)
 
 if __name__ == '__main__':
     unittest.main()
